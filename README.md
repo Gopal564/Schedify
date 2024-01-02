@@ -25,11 +25,11 @@ Define the number of patients, their visit types, and appointment durations.
 Here we are using our index page to take the input from the user using the web app
 interface. The page look like this - 
 
-![Input Page]()
+![Input Page](https://github.com/Gopal564/Schedify/assets/87975144/03f3215e-5f61-49bf-b085-52ea20f6069e)
 
 We are taking this information and storing it in the data bases and showing it on the result page as - 
 
-![Result Page]()
+![Result Page](https://github.com/Gopal564/Schedify/assets/87975144/e85d8b63-cf09-4b94-b3f6-aa6a6da4456a)
 
 Next we are taking this data from the data base and storing it in the list format which can be seen below for the example purpose.
 
