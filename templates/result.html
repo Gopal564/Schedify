@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Result Page</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      min-height: 100vh; /* Use min-height to ensure full page display */
+    }
+
+    .result-container {
+      text-align: center;
+      width: 80%; /* Adjusted the width of the result container */
+    }
+
+    table {
+      width: 100%; /* Adjusted the width to 100% for better responsiveness */
+      margin-top: 20px;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+      overflow-x: auto; /* Added overflow-x for horizontal scrolling on small screens */
+    }
+
+    th, td {
+      border: 1px solid #ddd;
+      padding: 12px;
+      text-align: left;
+    }
+
+    th {
+      background-color: #4caf50;
+      color: white;
+    }
+
+    .empty-cell {
+      background-color: #f0f0f0;
+    }
+
+    h1, h2 {
+      color: #333;
+    }
+
+    p {
+      margin: 10px 0;
+    }
+
+    #matplotlib-plot-container {
+      margin-top: 20px;
+      max-width: 100%; /* Ensure the image is not cropped */
+    }
+  </style>
+</head>
+
+<body>
+  <div class="result-container">
+    <h1>Result Page</h1>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Patient Name</th>
+          <th>1st Appointment</th>
+          <th>Hours</th>
+          <th>2nd Appointment</th>
+          <th>Hours</th>
+          <th>3rd Appointment</th>
+          <th>Hours</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for patient in all_patient_data %}
+          <tr>
+            <td>{{ patient.pat_name }}</td>
+
+            <!-- Display 1st Appointment Data -->
+            {% if patient.treat_type_1st_appointment %}
+              <td>{{ patient.treat_type_1st_appointment }}</td>
+              <td>{{ patient.treat_hrs_1st_appointment }}</td>
+            {% else %}
+              <td class="empty-cell"></td>
+              <td class="empty-cell"></td>
+            {% endif %}
+
+            <!-- Display 2nd Appointment Data -->
+            {% if patient.treat_type_2nd_appointment %}
+              <td>{{ patient.treat_type_2nd_appointment }}</td>
+              <td>{{ patient.treat_hrs_2nd_appointment }}</td>
+            {% else %}
+              <td class="empty-cell"></td>
+              <td class="empty-cell"></td>
+            {% endif %}
+
+            <!-- Display 3rd Appointment Data -->
+            {% if patient.treat_type_3rd_appointment %}
+              <td>{{ patient.treat_type_3rd_appointment }}</td>
+              <td>{{ patient.treat_hrs_3rd_appointment }}</td>
+            {% else %}
+              <td class="empty-cell"></td>
+              <td class="empty-cell"></td>
+            {% endif %}
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <h2>Optimization Result</h2>
+
+    <!-- D3.js container for the plot -->
+    <div id="matplotlib-plot-container"></div>
+
+    <!-- Include D3.js library -->
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+
+    <!-- Your D3.js script to load the Matplotlib plot -->
+    <script>
+      // Use D3.js to append an image to the container
+      d3.select("#matplotlib-plot-container")
+        .append("img")
+        .attr("src", "/static/plot.png")  // Update the path if needed
+        .attr("width", "100%")  // Adjust width as needed
+        .attr("height", "auto");  // Ensure aspect ratio is maintained
+    </script>
+    <p>The above plot is the result of the optimization process.</p>
+  </div>
+</body>
+
+</html>
