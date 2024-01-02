@@ -15,7 +15,7 @@ For example, if a naive scheduler might schedule 5 patients with varying visit t
 ![Naive Scheduler](https://cdn.mathpix.com/snip/images/Iw-XJinvIQy6KhtTamyERO845TnhXj-apdgZtuc9PxQ.original.fullsize.png)
 
 ### Optimized Scheduler
-![Optimized Scheduler](https://cdn.mathpix.com/snip/images/ActAcRQbUPPXS5MtkIkK7p0n9QPoxOpOlJweEaXbau8.original.fullsize.png)
+![Optimized Scheduler](https://github.com/Gopal564/Schedify/assets/87975144/db7879e4-02fa-4984-84ef-737dbf61b82b)
 
 ## Mathematical Model(Optimization Method)
 The program employs Mixed Integer Programming to create a mathematical model, transforming the scheduling problem into Python code. The following components are crucial to the model:
