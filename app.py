@@ -136,14 +136,22 @@ def create_app():
     def optimize_and_plot(times, clinic_sequence):
 
         # Optimization Algorithm
+
         # Convenience Variables
         patients = len(clinic_sequence)
-        valid_starts = [(j, m) for j in range(patients) for m in clinic_sequence[j]]
+        vis = len(times[0])
+        valid_starts = [(j, m)
+                        for j in range(patients)
+                        for m in clinic_sequence[j]]
         valid_starts.sort()
 
-        jjm = [(j, j_prime, m) for j in range(patients) for j_prime in range(patients) for m in
-               range(len(clinic_sequence[j]))
-               if j != j_prime and (j, m) in valid_starts and (j_prime, m) in valid_starts]
+        jjm = [(j, j_prime, m)
+               for j in range(patients)
+               for j_prime in range(patients)
+               for m in range(vis)
+               if j != j_prime
+               and (j, m) in valid_starts
+               and (j_prime, m) in valid_starts]
 
         # Objective
         schedule = LpProblem(name='Minimize_Schedule', sense=LpMinimize)
@@ -179,118 +187,88 @@ def create_app():
         # print(f"status: {schedule.status}, {LpStatus[schedule.status]}")
         # print(f"Completion Time: {schedule.objective.value()}")
 
-        # for j, m in valid_starts:
-        #     if x[j, m].varValue >= 0:
-        #         print(f"Patient {j + 1} starts in clinic {m} at time {x[j, m].varValue}")
+        for j, m in valid_starts:
+            if x[j, m].varValue >= 0:
+                print(f"Patient {j + 1} starts in clinic {m} at time {x[j, m].varValue}")
 
         # Create a full list of start times
-        start_times = []
-        for j, m in valid_starts:
-            if x[j, m].varValue >= 0:
-                start_times.append(x[j, m].varValue)
+        start_times = [x[j, m].varValue for j, m in valid_starts if x[j, m].varValue >= 0]
 
         # create full list of duration
-        duration = []
-        for time in times:
-            for i in time:
-                duration.append(i)
-        duration = [x for x in duration if x is not None]
+        duration = [x for time in times for x in time if x is not None]
 
         # create a full list of visits
-        visits = []
-        for j, m in valid_starts:
-            if x[j, m].varValue >= 0:
-                visits.append(m)
+        visits = [m for j, m in valid_starts if x[j, m].varValue >= 0]
 
         # create a full list of patients
-        patients = []
-        for j, m in valid_starts:
-            if x[j, m].varValue >= 0:
-                patients.append(j)
+        patients = [j for j, m in valid_starts if x[j, m].varValue >= 0]
 
-        # create the indexes for all visits
-        machine_1 = [i for i, e in enumerate(visits) if e == 0]
-        machine_2 = [i for i, e in enumerate(visits) if e == 1]
-        machine_3 = [i for i, e in enumerate(visits) if e == 2]
-        # machine_1, machine_2, machine_3
+        # machine_index for the plot purpose
+        machine_indexes = [[i for i, e in enumerate(visits) if e == m] for m in range(len(set(visits)))]
 
-        # Set up matplotlib figure and axis
         fig, gnt = plt.subplots()
 
-        # Set the axes names
+        # set the axes names
         gnt.set_xlabel("Time (in hours)")
         gnt.set_ylabel("Clinic Visits")
 
-        # Set axes limits
+        # set axes limits
         gnt.set_ylim(9, 40)
         gnt.set_xlim(0, schedule.objective.value())
 
-        # Set the ticks on the x-axis
-        gnt.set_xticks(range(0, int(schedule.objective.value()) + 1))  # Adjusted this line
+        # Setting the ticks on x axis
+        gnt.set_xticks(range(1, int(schedule.objective.value()) + 1))
 
-        # Set y-axis tick labels
+        # set y_tick-labels
+        tick_positions = [15, 25, 35]
+        gnt.set_yticks(tick_positions)
         gnt.set_yticklabels(['Clinic Visit', 'Infusion', 'Nurse Follow-Up'])
-        gnt.set_yticks([15, 25, 35])
 
-        # Set graph attributes
+        # setting graph attribute
         gnt.grid(True)
 
-        # Define colors for each patient
-        colors = ['tab:green', 'tab:orange', 'tab:blue', 'tab:purple', 'tab:red']
+        # Create a colormap based on the number of patients
+        cmap = plt.get_cmap('tab10', len(set(patients)))
 
-        # Define a mapping of patient indices to patient names
-        patient_names = {0: 'Patient A', 1: 'Patient B', 2: 'Patient C', 3: 'Patient D', 4: 'Patient E'}
+        for mul, machine_index in enumerate(machine_indexes):
+            color_machine = [cmap(idx) for idx in [patients[x] for x in machine_index]]
 
-        # Create legend patches
-        legend_patches = [mpatches.Patch(color=color, label=patient_names[patient]) for patient, color in
-                          enumerate(colors)]
-
-        # Plot schedules for each machine
-        def plot_schedule(machine, y_coord, colors):
             ncolor = 0
-            for idx, val in enumerate(machine):
+            for idx, val in enumerate(machine_index):
                 try:
-                    gnt.broken_barh([(start_times[val], duration[val])],  # Adjusted this line
-                                    (y_coord, 9),
-                                    facecolors=colors[ncolor])
+                    gnt.broken_barh([([start_times[x] for x in machine_index][idx],
+                                      [duration[x] for x in machine_index][idx])],
+                                    (10 + 10 * mul, 9),
+                                    facecolors=color_machine[ncolor])
                     ncolor += 1
                 except IndexError:
                     pass
 
-        # Plot schedules for each machine
-        plot_schedule(machine_1, 10, colors)
-        plot_schedule(machine_2, 20, colors)
-        plot_schedule(machine_3, 30, colors)
+        legend_patches = [mpatches.Patch(color=cmap(i), label=f"Patient {chr(65 + i)}") for i in
+                          range(len(set(patients)))]
 
-        # Add legend outside the plot
         plt.legend(handles=legend_patches, loc='upper left', bbox_to_anchor=(1, 1))
 
         plt.grid(True)
-
-        # Convert the Matplotlib plot to a base64-encoded image
-        img_data = io.BytesIO()
-        plt.savefig(img_data, format='png', bbox_inches='tight')
-        img_data.seek(0)
-        img_base64 = base64.b64encode(img_data.read()).decode('utf-8')
-        plt.close()  # Close the plot to prevent it from being displayed twice
-
-        # Return the base64-encoded image data
-        return img_base64
+        gnt.plot()
+        plt.tight_layout()  # Add this line to dynamically adjust the layout
+        # Save the plot as an image file
+        plt.savefig('static/plot.png')
 
     # Flask route to display the result
-    @app.route('/result', methods=['GET'])
+    @app.route('/show_result', methods=['GET', 'POST'])
     def show_result():
         # Get data from the database
         times, clinic_sequence = get_data_from_database()
 
         # Optimize and plot
-        img_base64 = optimize_and_plot(times, clinic_sequence)
+        optimize_and_plot(times, clinic_sequence)
 
-        if img_base64:
-            # Render the HTML page with the base64-encoded image
-            return render_template('result.html', img_base64=img_base64)
-        else:
-            return "Error generating optimization result image."
+        # Retrieve all patient data from the database
+        all_patient_data = Patient.query.all()
+
+        return render_template('result.html', all_patient_data=all_patient_data)
+
 
     @app.route('/')
     def home():
@@ -320,12 +298,9 @@ def create_app():
             else:
                 flash("Error adding/updating patient data. Please try again.")
 
-            # Retrieve all patient data from the database
-            all_patient_data = Patient.query.all()
+            # Redirect to the result page after adding a patient
+            return redirect(url_for('show_result'))
 
-            # print(all_patient_data)
-
-            return render_template('result.html', all_patient_data=all_patient_data)
         else:
             return render_template('index.html')
 
@@ -341,5 +316,3 @@ if __name__ == '__main__':
     app, db, _ = create_app()
     init_db(db)
     app.run(debug=True)
-
-
